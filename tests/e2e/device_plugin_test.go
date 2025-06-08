@@ -7,8 +7,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	// This is probably wrong
 	testclient "kubevirt-nvidia-device-plugin/tests/testenv"
-
-	"log"
 )
 
 var _ = Describe("GPU Device Plugin Test", Ordered, func() {
@@ -21,7 +19,7 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 		Expect(err).ToNot(HaveOccurred(), "Failed to create test client")
 	})
 
-	var _ = Describe("GPU Device Plugin Setup Validation", func() {
+	var _ = Describe("Setup Validation", func() {
 		Context("Test Device Plugin Deployment", func() {
 			When("Deploying device plugin", func() {
 				It("Should be running on each worker node", func() {
@@ -43,10 +41,18 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 	})
 
 	var _ = Describe("GPU Device Plugin Functional Test", func() {
+		When("Creating a new VM with GPUs", func() {
+			It("Should be running", func() {
+				// Create VM
+
+				// Check status
+			})
+		})
 
 	})
 })
 
+// Helper function - gets pods safely with error assertion
 func getPods(client *testclient.TestClient) []corev1.Pod {
 	pods, err := client.GetPodsList(client.Config.DevicePluginName, client.Config.DevicePluginNamespace)
 	Expect(err).ToNot(HaveOccurred())
@@ -68,7 +74,7 @@ func validatePodsStatus(client *testclient.TestClient) {
 
 	for podName, podStatus := range podsStatusMap {
 		// TODO: delete later
-		log.Printf("Pod Name: %s, Status: %s", podName, podStatus)
+		//log.Printf("Pod Name: %s, Status: %s", podName, podStatus)
 		Expect(podStatus).To(Equal(corev1.PodRunning),
 			fmt.Sprintf("pod %s is %s", podName, podStatus))
 	}
@@ -80,7 +86,12 @@ func validateAllocatableDevicesQuantity(client *testclient.TestClient) {
 		for _, dev := range node.Devices {
 			quantity, err := client.GetAllocatableDeviceQuantity(node.Name, dev.Name)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(quantity).Should(BeEquivalentTo(dev.Number))
+			Expect(quantity).To(BeEquivalentTo(dev.Number),
+				fmt.Sprintf("Number of device %s is incorrect.", dev.Name))
 		}
 	}
+}
+
+func createVirtualMachine(client *testclient.TestClient) {
+
 }

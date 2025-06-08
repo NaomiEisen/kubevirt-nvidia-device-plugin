@@ -14,6 +14,7 @@ import (
 
 // Flags
 var (
+	// TODO: change the default to something normal
 	testConfigFlag = flag.String("test-config", "../test_config_h100.yaml", "Path to test config file")
 	kubeconfigFlag *string
 )

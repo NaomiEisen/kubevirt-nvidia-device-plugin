@@ -14,4 +14,4 @@ nodes:
       - name: "nvidia.com/GH100_H100_NVSwitch"
         number: 4
       - name: "nvidia.com/GH100_H100_SXM5_80GB"
-        number: 8
+        number: 10
