@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+const (
+	LabelMaster       = "node-role.kubernetes.io/master"
+	LabelControlPlane = "node-role.kubernetes.io/control-plane"
+)
+
 type TestClient struct {
 	ClientSet kubernetes.Interface
 	Config    *TestConfig
@@ -50,11 +55,12 @@ func (t *TestClient) GetWorkerNodes() ([]corev1.Node, error) {
 	for _, node := range nodes.Items {
 		labels := node.Labels
 
+		// TODO: should we check both?
 		// Skip nodes labeled as master/control-plane
-		if _, isMaster := labels["node-role.kubernetes.io/master"]; isMaster {
+		if _, isMaster := labels[LabelMaster]; isMaster {
 			continue
 		}
-		if _, isControlPlane := labels["node-role.kubernetes.io/control-plane"]; isControlPlane {
+		if _, isControlPlane := labels[LabelControlPlane]; isControlPlane {
 			continue
 		}
 
@@ -112,7 +118,7 @@ func (t *TestClient) GetPodsStatusMap(pods []corev1.Pod) (map[string]corev1.PodP
 	return statusMap, nil
 }
 
-// --- Archive ---
+// --- Archive --- TODO: probably delete later
 func (t *TestClient) GetPodOnNode(nodeName string, podName string, namespace string) (*corev1.Pod, error) {
 	pods, err := t.ClientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
