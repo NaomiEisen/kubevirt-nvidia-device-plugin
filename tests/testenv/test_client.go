@@ -95,7 +95,6 @@ func (t *TestClient) GetPodsList(prefix string, namespace string) ([]corev1.Pod,
 	for _, pod := range podList.Items {
 		if strings.HasPrefix(pod.Name, prefix) {
 			matchedPods = append(matchedPods, pod)
-			print(pod.Name)
 		}
 	}
 	return matchedPods, nil
