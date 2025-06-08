@@ -1,5 +1,5 @@
 deviceplugin_name: "kubevirt-nvidia-device-plugin"
-deviceplugin_namespace: "kube-syste"
+deviceplugin_namespace: "kube-system"
 
 nodes:
   - name: "pokprod-b93r44s1"

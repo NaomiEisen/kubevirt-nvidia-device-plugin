@@ -35,7 +35,7 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 				if client.Config.Nodes == nil || len(client.Config.Nodes) == 0 {
 					Skip("User did not provide nodes and devices to check")
 				}
-				validateAllocatableDevicesQuantity(client)
+				validateDevicesCapacity(client)
 			})
 		})
 	})
@@ -84,11 +84,11 @@ func validatePodsStatus(client *testclient.TestClient) {
 	}
 }
 
-func validateAllocatableDevicesQuantity(client *testclient.TestClient) {
+func validateDevicesCapacity(client *testclient.TestClient) {
 	nodesToCheck := client.Config.Nodes
 	for _, node := range nodesToCheck {
 		for _, dev := range node.Devices {
-			quantity, err := client.GetAllocatableDeviceQuantity(node.Name, dev.Name)
+			quantity, err := client.GetDeviceCapacity(node.Name, dev.Name)
 			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Failed to get allocatable device %s", dev.Name))
 			Expect(quantity).To(BeEquivalentTo(dev.Number),
 				fmt.Sprintf("Number of device %s is incorrect.", dev.Name))

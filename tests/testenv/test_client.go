@@ -74,6 +74,20 @@ func (t *TestClient) GetWorkerNodes() ([]corev1.Node, error) {
 	return workerNodes, nil
 }
 
+// TODO: make one function
+func (t *TestClient) GetDeviceCapacity(nodeName string, deviceName string) (string, error) {
+	node, err := t.GetNode(nodeName)
+	if err != nil {
+		return "", err
+	}
+	quantity, exists := node.Status.Capacity[corev1.ResourceName(deviceName)]
+	if !exists {
+		return "", fmt.Errorf("device %s not found in 'Capacity' section of node %s", deviceName, nodeName)
+	}
+
+	return quantity.String(), nil
+}
+
 func (t *TestClient) GetAllocatableDeviceQuantity(nodeName string, deviceName string) (string, error) {
 	node, err := t.GetNode(nodeName)
 	if err != nil {
