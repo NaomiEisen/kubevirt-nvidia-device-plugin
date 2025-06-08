@@ -1,5 +1,5 @@
 deviceplugin_name: "kubevirt-nvidia-device-plugin"
-deviceplugin_namespace: "kube-system"
+deviceplugin_namespace: "kube-syste"
 
 nodes:
   - name: "pokprod-b93r44s1"
@@ -14,4 +14,4 @@ nodes:
       - name: "nvidia.com/GH100_H100_NVSwitch"
         number: 4
       - name: "nvidia.com/GH100_H100_SXM5_80GB"
-        number: 10
+        number: 8

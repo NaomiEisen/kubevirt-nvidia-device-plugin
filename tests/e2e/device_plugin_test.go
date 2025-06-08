@@ -56,15 +56,19 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 func getPods(client *testclient.TestClient) []corev1.Pod {
 	pods, err := client.GetPodsList(client.Config.DevicePluginName, client.Config.DevicePluginNamespace)
 	Expect(err).ToNot(HaveOccurred())
-	Expect(pods).ToNot(BeEmpty(), "No device plugin pods found")
+	Expect(pods).ToNot(BeEmpty(),
+		fmt.Sprintf("No device plugin pods with the name \"%s\" are found in namespace \"%s\"",
+			client.Config.DevicePluginName, client.Config.DevicePluginNamespace))
 	return pods
 }
 
 func validateNumPods(client *testclient.TestClient) {
 	pods := getPods(client)
+
 	workerNodes, err := client.GetWorkerNodes()
 	Expect(err).ToNot(HaveOccurred())
-	Expect(len(workerNodes)).To(Equal(len(pods)))
+	Expect(len(workerNodes)).To(Equal(len(pods)),
+		"Number of device plugin pods is not aligned with the number of available worker nodes")
 }
 
 func validatePodsStatus(client *testclient.TestClient) {
@@ -85,7 +89,7 @@ func validateAllocatableDevicesQuantity(client *testclient.TestClient) {
 	for _, node := range nodesToCheck {
 		for _, dev := range node.Devices {
 			quantity, err := client.GetAllocatableDeviceQuantity(node.Name, dev.Name)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Failed to get allocatable device %s", dev.Name))
 			Expect(quantity).To(BeEquivalentTo(dev.Number),
 				fmt.Sprintf("Number of device %s is incorrect.", dev.Name))
 		}

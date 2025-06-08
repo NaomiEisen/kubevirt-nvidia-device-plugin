@@ -2,7 +2,6 @@ package testenv
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,7 +75,7 @@ func (t *TestClient) GetAllocatableDeviceQuantity(nodeName string, deviceName st
 	}
 	quantity, exists := node.Status.Allocatable[corev1.ResourceName(deviceName)]
 	if !exists {
-		return "", errors.New(fmt.Sprintf("device %s not found in allocatable resources for node %s", deviceName, nodeName))
+		return "", fmt.Errorf("device %s not found in allocatable resources for node %s", deviceName, nodeName)
 	}
 
 	return quantity.String(), nil
@@ -84,7 +83,7 @@ func (t *TestClient) GetAllocatableDeviceQuantity(nodeName string, deviceName st
 
 func (t *TestClient) GetPodsList(prefix string, namespace string) ([]corev1.Pod, error) {
 	if prefix == "" || namespace == "" {
-		return nil, errors.New("prefix or namespace is empty")
+		return nil, fmt.Errorf("prefix or namespace is empty")
 	}
 	podList, err := t.ClientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -102,7 +101,7 @@ func (t *TestClient) GetPodsList(prefix string, namespace string) ([]corev1.Pod,
 
 func (t *TestClient) GetPodsStatusMap(pods []corev1.Pod) (map[string]corev1.PodPhase, error) {
 	if pods == nil {
-		return nil, errors.New("invalid pod list")
+		return nil, fmt.Errorf("invalid pod list")
 	}
 
 	statusMap := make(map[string]corev1.PodPhase)
@@ -126,5 +125,5 @@ func (t *TestClient) GetPodOnNode(nodeName string, podName string, namespace str
 		}
 	}
 
-	return nil, errors.New("pod not found")
+	return nil, fmt.Errorf("pod not found")
 }
