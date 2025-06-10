@@ -1,0 +1,28 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: gpu-test-vm
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: gpu-test-vm
+    spec:
+      domain:
+        devices:
+          gpus:
+            - name: nvidia-NVSwitch
+              deviceName: nvidia.com/GH100_H100_NVSwitch
+            - name: nvidia-GPU
+              deviceName: nvidia.com/GH100_H100_SXM5_80GB
+
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: "2"
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo

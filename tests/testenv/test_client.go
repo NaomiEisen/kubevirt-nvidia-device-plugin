@@ -6,6 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"kubevirt.io/client-go/kubecli"
 	"strings"
 )
 
@@ -15,8 +16,9 @@ const (
 )
 
 type TestClient struct {
-	ClientSet kubernetes.Interface
-	Config    *TestConfig
+	ClientSet      kubernetes.Interface
+	KubeVirtClient kubecli.KubevirtClient
+	Config         *TestConfig
 }
 
 type TestConfig struct {
