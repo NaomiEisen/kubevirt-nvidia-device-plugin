@@ -152,7 +152,8 @@ func validateRunningVM(client *testclient.TestClient, vm v1.VirtualMachine) {
 			return ""
 		}
 		return vmi.Status.Phase
-	}, WaitingTimeout, CheckInterval).Should(Equal(v1.Running))
+	}, WaitingTimeout, CheckInterval).Should(Equal(v1.Running),
+		fmt.Sprintf("Failed to get running virtual machine %s", vm.Name))
 
 }
 
