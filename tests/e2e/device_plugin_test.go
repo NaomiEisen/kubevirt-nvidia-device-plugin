@@ -15,6 +15,11 @@ import (
 	testclient "kubevirt-nvidia-device-plugin/tests/testenv"
 )
 
+const (
+	WaitingTimeout time.Duration = 1 * time.Minute
+	CheckInterval  time.Duration = 2 * time.Second
+)
+
 var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 	var client *testclient.TestClient
 	var vm v1.VirtualMachine
@@ -61,7 +66,7 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 			})
 
 			It("Should be successfully deleted", func() {
-
+				deleteVirtualMachine(client, vm)
 			})
 		})
 
@@ -110,6 +115,19 @@ func validateDevicesCapacity(client *testclient.TestClient) {
 	}
 }
 
+func createVirtualMachine(client *testclient.TestClient) v1.VirtualMachine {
+	vm := client.GetVirtualMachine()
+
+	// Set vm to run
+	vm.Spec.RunStrategy = ptr.To(v1.RunStrategyAlways)
+
+	vmInterface := client.KubeVirtClient.VirtualMachine("default")
+	createdVM, err := vmInterface.Create(context.TODO(), vm, metav1.CreateOptions{})
+	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Failed to create virtual machine %s", vm.Name))
+
+	return *createdVM
+}
+
 func validateRunningVM(client *testclient.TestClient, vm v1.VirtualMachine) {
 	var vmi *v1.VirtualMachineInstance
 	var err error
@@ -122,19 +140,14 @@ func validateRunningVM(client *testclient.TestClient, vm v1.VirtualMachine) {
 			return ""
 		}
 		return vmi.Status.Phase
-	}, 60*time.Second, 2*time.Second).Should(Equal(v1.Running))
+	}, WaitingTimeout, CheckInterval).Should(Equal(v1.Running))
 
 }
 
-func createVirtualMachine(client *testclient.TestClient) v1.VirtualMachine {
-	vm := client.GetVirtualMachine()
+func deleteVirtualMachine(client *testclient.TestClient, vm v1.VirtualMachine) {
+	vmInterface := client.KubeVirtClient.VirtualMachine(vm.Namespace)
 
-	// Set vm to run
-	vm.Spec.RunStrategy = ptr.To(v1.RunStrategyAlways)
-
-	vmInterface := client.KubeVirtClient.VirtualMachine("default")
-	createdVM, err := vmInterface.Create(context.TODO(), vm, metav1.CreateOptions{})
-	Expect(err).ToNot(HaveOccurred(), "Failed to create virtual machine")
-
-	return *createdVM
+	err := vmInterface.Delete(context.TODO(), vm.Name, metav1.DeleteOptions{})
+	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Failed to delete virtual machine %s", vm.Name))
+	fmt.Printf("Deleted VM %s\n", vm.Name)
 }
