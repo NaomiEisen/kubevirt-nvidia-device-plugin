@@ -35,8 +35,9 @@ type NodeInfo struct {
 }
 
 type DeviceInfo struct {
-	Name   string `yaml:"name"`
-	Number string `yaml:"number"`
+	Name     string `yaml:"name"`
+	Number   string `yaml:"number"`
+	Allocate bool   `yaml:"allocate"`
 }
 
 // ---- Client methods ----
@@ -59,7 +60,6 @@ func (t *TestClient) GetWorkerNodes() ([]corev1.Node, error) {
 	for _, node := range nodes.Items {
 		labels := node.Labels
 
-		// TODO: should we check both?
 		// Skip nodes labeled as master/control-plane
 		if _, isMaster := labels[LabelMaster]; isMaster {
 			continue
@@ -105,6 +105,23 @@ func (t *TestClient) GetAllocatableDeviceQuantity(nodeName string, deviceName st
 	return quantity.String(), nil
 }
 
+// ---- end TODO
+
+func (t *TestClient) GetPodOnNode(nodeName string, podNamePrefix string, namespace string) (*corev1.Pod, error) {
+	pods, err := t.ClientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pod := range pods.Items {
+		if pod.Spec.NodeName == nodeName && strings.HasPrefix(pod.Name, podNamePrefix) {
+			return &pod, nil
+		}
+	}
+
+	return nil, fmt.Errorf(fmt.Sprintf("pod \"%s\" on node \"%s\" not found", podNamePrefix, nodeName))
+}
+
 func (t *TestClient) GetPodsList(prefix string, namespace string) ([]corev1.Pod, error) {
 	if prefix == "" || namespace == "" {
 		return nil, fmt.Errorf("prefix or namespace is empty")
@@ -137,10 +154,27 @@ func (t *TestClient) GetPodsStatusMap(pods []corev1.Pod) (map[string]corev1.PodP
 }
 
 func (t *TestClient) GetVirtualMachine() *v1.VirtualMachine {
+	var gpus []v1.GPU
+
+	// Get devices to allocate
+	gpu_index := 0
+	for _, node := range t.Config.Nodes {
+		for _, device := range node.Devices {
+			if device.Allocate {
+				// One of each device is enough
+				gpus = append(gpus, v1.GPU{
+					Name:       fmt.Sprintf("GPU-%d", gpu_index),
+					DeviceName: device.Name,
+				})
+				gpu_index++
+			}
+		}
+	}
+
 	vm := &v1.VirtualMachine{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gpu-test-vm",
-			Namespace: "default",
+			Namespace: "default", // TODO: maybe change?
 		},
 		Spec: v1.VirtualMachineSpec{
 			Template: &v1.VirtualMachineInstanceTemplateSpec{
@@ -157,18 +191,18 @@ func (t *TestClient) GetVirtualMachine() *v1.VirtualMachine {
 								corev1.ResourceMemory: *resource.NewQuantity(4*1024*1024*1024, resource.BinarySI), // 4Gi
 							},
 						},
-						Devices: v1.Devices{
-							GPUs: []v1.GPU{
-								{
-									Name:       "nvidia-NVSwitch",
-									DeviceName: "nvidia.com/GH100_H100_NVSwitch",
-								},
-								{
-									Name:       "nvidia-GPU",
-									DeviceName: "nvidia.com/GH100_H100_SXM5_80GB",
-								},
-							},
-						},
+						//Devices: v1.Devices{
+						//	GPUs: []v1.GPU{
+						//		{
+						//			Name:       "nvidia-NVSwitch",
+						//			DeviceName: "nvidia.com/GH100_H100_NVSwitch",
+						//		},
+						//		{
+						//			Name:       "nvidia-GPU",
+						//			DeviceName: "nvidia.com/GH100_H100_SXM5_80GB",
+						//		},
+						//	},
+						//},
 					},
 					Volumes: []v1.Volume{
 						{
@@ -185,21 +219,9 @@ func (t *TestClient) GetVirtualMachine() *v1.VirtualMachine {
 		},
 	}
 
+	if len(gpus) > 0 {
+		vm.Spec.Template.Spec.Domain.Devices.GPUs = gpus
+	}
+
 	return vm
-}
-
-// --- Archive --- TODO: probably delete later
-func (t *TestClient) GetPodOnNode(nodeName string, podName string, namespace string) (*corev1.Pod, error) {
-	pods, err := t.ClientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, pod := range pods.Items {
-		if pod.Spec.NodeName == nodeName && pod.Name == podName {
-			return &pod, nil
-		}
-	}
-
-	return nil, fmt.Errorf("pod not found")
 }

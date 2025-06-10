@@ -35,9 +35,9 @@ var _ = Describe("GPU Device Plugin Test", Ordered, func() {
 		Context("Device Plugin Deployment", func() {
 			When("Deploying device plugin", func() {
 				It("is present on each worker node", func() {
-					// TODO: maybe should explicitly check each node for one corresponding pod
+					// TODO: Choose one of them
 					validateNumPods(client)
-
+					validateDPOnEachNode(client)
 				})
 				It("has all pods in the RUNNING state", func() {
 					validatePodsStatus(client)
@@ -90,6 +90,18 @@ func validateNumPods(client *testclient.TestClient) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(len(workerNodes)).To(Equal(len(pods)),
 		"Number of device plugin pods is not aligned with the number of available worker nodes")
+}
+
+func validateDPOnEachNode(client *testclient.TestClient) {
+	workerNodes, err := client.GetWorkerNodes()
+	Expect(err).ToNot(HaveOccurred())
+
+	for _, node := range workerNodes {
+		_, err = client.GetPodOnNode(node.Name, client.Config.DevicePluginName, client.Config.DevicePluginNamespace)
+		Expect(err).ToNot(HaveOccurred(),
+			fmt.Sprintf("Failed to get pod with prefix \"%s\" on node \"%s\"", client.Config.DevicePluginName, node.Name))
+	}
+
 }
 
 func validatePodsStatus(client *testclient.TestClient) {
@@ -149,5 +161,4 @@ func deleteVirtualMachine(client *testclient.TestClient, vm v1.VirtualMachine) {
 
 	err := vmInterface.Delete(context.TODO(), vm.Name, metav1.DeleteOptions{})
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Failed to delete virtual machine %s", vm.Name))
-	fmt.Printf("Deleted VM %s\n", vm.Name)
 }

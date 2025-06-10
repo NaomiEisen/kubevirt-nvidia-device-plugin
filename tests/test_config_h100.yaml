@@ -6,8 +6,10 @@ nodes:
     devices:
       - name: "nvidia.com/GH100_H100_NVSwitch"
         number: 4
+        allocate: true
       - name: "nvidia.com/GH100_H100_SXM5_80GB"
         number: 8
+        allocate: true
 
   - name: "pokprod-b93r44s3"
     devices:

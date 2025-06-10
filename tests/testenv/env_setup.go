@@ -13,19 +13,25 @@ import (
 	kubecli "kubevirt.io/client-go/kubecli"
 )
 
+const (
+	// TODO: change the default to something normal
+	DefaultTestConfigPath = "../test_config_h100.yaml"
+)
+
 // Flags
 var (
-	// TODO: change the default to something normal
-	testConfigFlag = flag.String("test-config", "../test_config_h100.yaml", "Path to test config file")
+	testConfigFlag = flag.String("test-config", DefaultTestConfigPath, "Path to test config file")
 	kubeconfigFlag *string
 )
 
 // Set kubeconfigFlag path
 func init() {
+	usage := "absolute path to the kubeconfigFlag file"
+
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfigFlag = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfigFlag file")
+		kubeconfigFlag = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), usage)
 	} else {
-		kubeconfigFlag = flag.String("kubeconfig", "", "absolute path to the kubeconfigFlag file")
+		kubeconfigFlag = flag.String("kubeconfig", "", usage)
 	}
 }
 
