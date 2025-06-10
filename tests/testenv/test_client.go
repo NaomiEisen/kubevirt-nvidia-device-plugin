@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	v1 "kubevirt.io/api/core/v1"
 	"kubevirt.io/client-go/kubecli"
 	"strings"
 )
@@ -132,6 +134,58 @@ func (t *TestClient) GetPodsStatusMap(pods []corev1.Pod) (map[string]corev1.PodP
 	}
 
 	return statusMap, nil
+}
+
+func (t *TestClient) GetVirtualMachine() *v1.VirtualMachine {
+	vm := &v1.VirtualMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gpu-test-vm",
+			Namespace: "default",
+		},
+		Spec: v1.VirtualMachineSpec{
+			Template: &v1.VirtualMachineInstanceTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"kubevirt.io/domain": "gpu-test-vm",
+					},
+				},
+				Spec: v1.VirtualMachineInstanceSpec{
+					Domain: v1.DomainSpec{
+						Resources: v1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
+								corev1.ResourceMemory: *resource.NewQuantity(4*1024*1024*1024, resource.BinarySI), // 4Gi
+							},
+						},
+						Devices: v1.Devices{
+							GPUs: []v1.GPU{
+								{
+									Name:       "nvidia-NVSwitch",
+									DeviceName: "nvidia.com/GH100_H100_NVSwitch",
+								},
+								{
+									Name:       "nvidia-GPU",
+									DeviceName: "nvidia.com/GH100_H100_SXM5_80GB",
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "containerdisk",
+							VolumeSource: v1.VolumeSource{
+								ContainerDisk: &v1.ContainerDiskSource{
+									Image: "quay.io/kubevirt/cirros-container-disk-demo",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return vm
 }
 
 // --- Archive --- TODO: probably delete later
