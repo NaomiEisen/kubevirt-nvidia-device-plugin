@@ -12,7 +12,7 @@ import (
 	"time"
 
 	// This is probably wrong
-	testclient "kubevirt-nvidia-device-plugin/tests/testenv"
+	testclient "kubevirt-nvidia-device-plugin/tests/testclient"
 )
 
 const (
