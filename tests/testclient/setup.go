@@ -15,7 +15,7 @@ import (
 
 const (
 	// TODO: change the default to something normal
-	DefaultTestConfigPath = "../test_config_h100.yaml"
+	DefaultTestConfigPath = "../test_config.yaml"
 )
 
 // Flags

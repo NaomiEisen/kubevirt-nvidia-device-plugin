@@ -112,7 +112,7 @@ func (t *TestClient) GetPodOnNode(nodeName string, podNamePrefix string, namespa
 	if err != nil {
 		return nil, err
 	}
-
+	// TODO check num of pods per node
 	for _, pod := range pods.Items {
 		if pod.Spec.NodeName == nodeName && strings.HasPrefix(pod.Name, podNamePrefix) {
 			return &pod, nil
